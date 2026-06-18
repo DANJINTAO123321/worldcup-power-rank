@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 世界杯球队武力值排行榜</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #faf8f5;
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #d4a500, #ff8c00, #d4a500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header .subtitle { color: #666; font-size: 1.1em; }
+        .update-time {
+            background: #fff8e6;
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 15px;
+            color: #b8860b;
+            font-size: 0.9em;
+        }
+        .group-section {
+            background: #fffdf9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .group-title {
+            color: #ffd700;
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255,215,0,0.3);
+        }
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 12px;
+        }
+        .team-card {
+            background: #fffefb;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            border: 1px solid #e8e4de;
+            cursor: pointer;
+        }
+        .team-card:hover {
+            background: #fffdf9;
+            border-color: #e6c200;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .team-card.expanded { background: #fffdf9; border-color: #e6c200; }
+        .team-header { display: flex; align-items: center; gap: 12px; }
+        .team-flag { font-size: 2.5em; line-height: 1; }
+        .team-info { flex: 1; }
+        .team-name { font-size: 1.1em; font-weight: bold; margin-bottom: 5px; }
+        .team-stats { font-size: 0.8em; color: #666; }
+        .power-section { display: flex; align-items: center; gap: 10px; }
+        .power-bar { width: 80px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .power-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .power-value { font-size: 1.3em; font-weight: bold; min-width: 45px; text-align: right; }
+        .expand-icon { font-size: 1.2em; transition: transform 0.3s ease; color: #666; }
+        .team-card.expanded .expand-icon { transform: rotate(180deg); }
+        .team-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        .team-card.expanded .team-detail {
+            max-height: 500px;
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 1px solid #e8e4de;
+        }
+        .detail-section { margin-bottom: 10px; }
+        .detail-title { color: #333; font-size: 0.85em; margin-bottom: 5px; font-weight: bold; }
+        .detail-content { color: #555; font-size: 0.85em; line-height: 1.6; }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+        .tag { background: #e8f5e9; color: #2e7d32; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; }
+        .tag.red { background: #ffebee; color: #c62828; }
+        .tag.green { background: #e8f5e9; color: #2e7d32; }
+        .tag.blue { background: #e3f2fd; color: #1565c0; }
+        
+        .power-92 { color: #ff4757; }
+        .power-92 .power-fill { background: linear-gradient(90deg, #ff4757, #ff6b81); }
+        .power-91 { color: #ff5252; }
+        .power-91 .power-fill { background: linear-gradient(90deg, #ff5252, #ff7b7b); }
+        .power-89 { color: #ff6348; }
+        .power-89 .power-fill { background: linear-gradient(90deg, #ff6348, #ff8a66); }
+        .power-88 { color: #ffa502; }
+        .power-88 .power-fill { background: linear-gradient(90deg, #ffa502, #ffbe76); }
+        .power-87 { color: #ff9f43; }
+        .power-87 .power-fill { background: linear-gradient(90deg, #ff9f43, #ffbe76); }
+        .power-85 { color: #ffc048; }
+        .power-85 .power-fill { background: linear-gradient(90deg, #ffc048, #ffd93d); }
+        .power-84 { color: #ffd700; }
+        .power-84 .power-fill { background: linear-gradient(90deg, #ffd700, #fff200); }
+        .power-83 { color: #eccc71; }
+        .power-83 .power-fill { background: linear-gradient(90deg, #eccc71, #fff200); }
+        .power-82 { color: #d7b740; }
+        .power-82 .power-fill { background: linear-gradient(90deg, #d7b740, #f0d000); }
+        .power-80 { color: #a8c640; }
+        .power-80 .power-fill { background: linear-gradient(90deg, #a8c640, #c4d93d); }
+        .power-78 { color: #7bed9f; }
+        .power-78 .power-fill { background: linear-gradient(90deg, #7bed9f, #a8ea6a); }
+        .power-76 { color: #70a1ff; }
+        .power-76 .power-fill { background: linear-gradient(90deg, #70a1ff, #a29bfe); }
+        .power-75 { color: #74b9ff; }
+        .power-75 .power-fill { background: linear-gradient(90deg, #74b9ff, #a4c4ff); }
+        .power-72 { color: #a4a4a4; }
+        .power-72 .power-fill { background: linear-gradient(90deg, #a4a4a4, #c4c4c4); }
+        .power-70 { color: #95a5a6; }
+        .power-70 .power-fill { background: linear-gradient(90deg, #95a5a6, #b5b5b5); }
+        .power-68 { color: #888; }
+        .power-68 .power-fill { background: linear-gradient(90deg, #888, #a8a8a8); }
+        .power-65 { color: #777; }
+        .power-65 .power-fill { background: linear-gradient(90deg, #777, #979797); }
+        .power-62 { color: #666; }
+        .power-62 .power-fill { background: linear-gradient(90deg, #666, #868686); }
+        .power-58 { color: #555; }
+        .power-58 .power-fill { background: linear-gradient(90deg, #555, #757575); }
+        .power-55 { color: #444; }
+        .power-55 .power-fill { background: linear-gradient(90deg, #444, #646464); }
+        .power-50 { color: #404040; }
+        .power-50 .power-fill { background: linear-gradient(90deg, #404040, #606060); }
+        .power-48 { color: #383838; }
+        .power-48 .power-fill { background: linear-gradient(90deg, #383838, #585858); }
+        .power-40 { color: #303030; }
+        .power-40 .power-fill { background: linear-gradient(90deg, #303030, #505050); }
+        .power-35 { color: #282828; }
+        .power-35 .power-fill { background: linear-gradient(90deg, #282828, #484848); }
+        .power-32 { color: #222; }
+        .power-32 .power-fill { background: linear-gradient(90deg, #222, #424242); }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #fffdf9;
+            border-radius: 10px;
+            border: 1px solid #e8e4de;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #444; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-dot.red { background: #ff4757; }
+        .legend-dot.orange { background: #ffa502; }
+        .legend-dot.yellow { background: #ffd700; }
+        .legend-dot.green { background: #7bed9f; }
+        .legend-dot.blue { background: #70a1ff; }
+        .legend-dot.gray { background: #888; }
+        
+        .top10-section {
+            background: #fffdf9;
+            border: 2px solid #e6c200;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .top10-section .group-title { color: #cc9900; font-size: 1.6em; }
+        .top10-item {
+            background: #fffef5;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e6c200;
+        }
+        .top10-item:hover { background: #fff8e6; }
+        .top10-rank { font-size: 1.2em; font-weight: bold; min-width: 30px; }
+        .top10-rank.gold { color: #cc9900; }
+        .top10-rank.silver { color: #888; }
+        .top10-rank.bronze { color: #8b6914; }
+        
+        .instruction {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fffdf9;
+            border-radius: 8px;
+            border: 1px solid #e8e4de;
+        }
+        
+        .prediction-section {
+            background: #fffdf9;
+            border: 2px solid #5cb85c;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .prediction-section .group-title { color: #3d8b3d; }
+        
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .legend { font-size: 0.8em; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 世界杯球队武力值排行榜</h1>
+        <p class="subtitle">2026美加墨世界杯 · 实时战力评估</p>
+        <div class="update-time">📅 更新时间: 2026年6月19日 · 🦐 玲珑Hermes分析</div>
+    </div>
+    
+    <div class="instruction">💡 点击任意球队卡片展开详细分析</div>
+    
+    <div class="legend">
+        <div class="legend-item"><span class="legend-dot red"></span> 90+ 超级强队</div>
+        <div class="legend-item"><span class="legend-dot orange"></span> 85-89 夺冠热门</div>
+        <div class="legend-item"><span class="legend-dot yellow"></span> 75-84 劲旅</div>
+        <div class="legend-item"><span class="legend-dot green"></span> 60-74 中上游</div>
+        <div class="legend-item"><span class="legend-dot blue"></span> 45-59 黑马/弱旅</div>
+        <div class="legend-item"><span class="legend-dot gray"></span> 45以下 陪练</div>
+    </div>
+    
+    <!-- 每日预测板块 -->
+    <div class="group-section prediction-section">
+        <div class="group-title">📝 玲珑Hermes 每日预测与分析</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px;">
+                <h3 style="color: #ffd700; margin-bottom: 15px;">📅 6月19日 预测回顾</h3>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #7bed9f;">✅ 捷克 1:1 南非 → <strong>预测正确</strong></div>
+                    <div style="font-size: 0.85em; color: #aaa;">推荐1:1稳胆，概率35%</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #ffd700;">⏳ 瑞士 vs 波黑 → 待开奖</div>
+                    <div style="font-size: 0.85em; color: #aaa;">推荐: 瑞士1:0 / 1:1</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #7bed9f;">⏳ 加拿大 vs 卡塔尔 → 待开奖</div>
+                    <div style="font-size: 0.85em; color: #aaa;">推荐: 加拿大2:0 / 3:0</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="color: #ffa502;">⚠️ 墨西哥 vs 韩国 → 待开奖</div>
+                    <div style="font-size: 0.85em; color: #aaa;">推荐: 墨西哥2:1 或 韩国2:1爆冷</div>
+                </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px;">
+                <h3 style="color: #ffd700; margin-bottom: 15px;">📊 今日投注建议</h3>
+                <div style="margin-bottom: 12px;">
+                    <div style="color: #7bed9f; font-weight: bold;">🏆 稳健方案</div>
+                    <div style="font-size: 0.85em; color: #ccc;">瑞士胜 + 加拿大胜</div>
+                    <div style="font-size: 0.8em; color: #aaa;">2串1 赔率约2.2倍</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="color: #ffa502; font-weight: bold;">💰 进取方案</div>
+                    <div style="font-size: 0.85em; color: #ccc;">加拿大2:0 + 巴西3:0 + 荷兰2:1</div>
+                    <div style="font-size: 0.8em; color: #aaa;">3串1 赔率约50倍</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="color: #ff6b7a; font-weight: bold;">🔥 搏冷方案</div>
+                    <div style="font-size: 0.85em; color: #ccc;">波黑1:0 + 韩国1:2 + 加拿大1:0</div>
+                    <div style="font-size: 0.8em; color: #aaa;">3串1 赔率约150倍</div>
+                </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px;">
+                <h3 style="color: #ffd700; margin-bottom: 15px;">📈 命中率统计</h3>
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div><div style="font-size: 2em; color: #7bed9f;">1</div><div style="font-size: 0.8em; color: #aaa;">已预测</div></div>
+                    <div><div style="font-size: 2em; color: #7bed9f;">1</div><div style="font-size: 0.8em; color: #aaa;">命中</div></div>
+                    <div><div style="font-size: 2em; color: #ffd700;">100%</div><div style="font-size: 0.8em; color: #aaa;">命中率</div></div>
+                </div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="color: #aaa; font-size: 0.85em;">🏆 最佳推荐</div>
+                    <div style="color: #7bed9f; font-weight: bold;">捷克 vs 南非 1:1</div>
+                    <div style="color: #888; font-size: 0.8em;">比分稳胆 赔率5.75倍</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TOP 10 排行榜 -->
+    <div class="group-section top10-section">
+        <div class="group-title">🔥 TOP 10 武力值排行</div>
+        <div class="top10-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+            <div class="top10-item" onclick="scrollToTeam('spain')"><span class="top10-rank gold">1</span><span>🇪🇸 西班牙</span><strong style="color:#ff4757;margin-left:auto">92</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('france')"><span class="top10-rank gold">2</span><span>🇫🇷 法国</span><strong style="color:#ff4757;margin-left:auto">91</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('england')"><span class="top10-rank gold">3</span><span>🏴󠁧󠁢󠁥󠁮󠁧󠁿 英格兰</span><strong style="color:#ffa502;margin-left:auto">89</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('argentina')"><span class="top10-rank silver">4</span><span>🇦🇷 阿根廷</span><strong style="color:#ffa502;margin-left:auto">88</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('brazil')"><span class="top10-rank silver">5</span><span>🇧🇷 巴西</span><strong style="color:#ffa502;margin-left:auto">87</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('germany')"><span class="top10-rank bronze">6</span><span>🇩🇪 德国</span><strong style="color:#ffd700;margin-left:auto">85</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('netherlands')"><span class="top10-rank bronze">7</span><span>🇳🇱 荷兰</span><strong style="color:#ffd700;margin-left:auto">84</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('portugal')"><span class="top10-rank">8</span><span>🇵🇹 葡萄牙</span><strong style="color:#ffd700;margin-left:auto">83</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('morocco')"><span class="top10-rank">9</span><span>🇲🇦 摩洛哥</span><strong style="color:#d7b740;margin-left:auto">82</strong></div>
+            <div class="top10-item" onclick="scrollToTeam('usa')"><span class="top10-rank">10</span><span>🇺🇸 美国</span><strong style="color:#a8c640;margin-left:auto">80</strong></div>
+        </div>
+    </div>
+    
+    <!-- A组 -->
+    <div class="group-section" id="group-a">
+        <div class="group-title">🏟️ A组 · 墨西哥、韩国、捷克、南非</div>
+        <div class="teams-grid">
+            <div class="team-card power-80" id="mexico" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇲🇽</span>
+                    <div class="team-info"><div class="team-name">墨西哥</div><div class="team-stats">首轮 2:0 南非 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:80%"></div></div><span class="power-value">80</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">中北美传统强队，首轮2:0完胜10人南非，状态出色。希门尼斯+基尼奥内斯双枪火力凶猛，高原主场优势明显。球队配合默契，进攻套路丰富，是本届黑马候选。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">高原主场</span><span class="tag green">进攻犀利</span><span class="tag green">经验丰富</span><span class="tag green">配合默契</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守不稳</span><span class="tag red">年龄偏大</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">希门尼斯（前锋）、基尼奥内斯（前锋）、瓜尔达多（中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-78" id="korea" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇰🇷</span>
+                    <div class="team-info"><div class="team-name">韩国</div><div class="team-stats">首轮 2:1 捷克 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:78%"></div></div><span class="power-value">78</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲最强球队之一，首轮2:1逆转捷克展现强队底蕴。李刚仁+孙兴慜双核驱动，进攻流畅。本届亚洲球队整体表现出色，韩国有望小组出线。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻强</span><span class="tag green">速度快</span><span class="tag green">状态好</span><span class="tag green">逆转能力</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守一般</span><span class="tag red">体能隐患</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">孙兴慜（热刺/前锋队长）、李刚仁（巴黎/中场）、黄喜灿（狼队/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="czech" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇿</span>
+                    <div class="team-info"><div class="team-name">捷克</div><div class="team-stats">首轮 1:1 韩国 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">欧洲二流球队，首轮1:1战平韩国。进攻效率一般，但防守尚可。绍切克领衔中场，具备一定控制力。整体实力有限，出线难度大。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守硬</span><span class="tag green">中场控制</span><span class="tag">定位球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻差</span><span class="tag red">效率低</span><span class="tag red">缺乏球星</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">绍切克（西汉姆/中场核心）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="southafrica" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇿🇦</span>
+                    <div class="team-info"><div class="team-name">南非</div><div class="team-stats">首轮 0:2 墨西哥 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲球队，首轮揭幕战2红牌10人作战仍只输0:2，防守顽强拼搏精神强。球员多来自国内联赛，能力有限但作风硬朗。出线希望渺茫。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守顽强</span><span class="tag green">拼搏精神</span><span class="tag green">身体对抗</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">红牌多</span><span class="tag red">技术一般</span><span class="tag red">缺乏核心</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无超级球星</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- B组 -->
+    <div class="group-section" id="group-b">
+        <div class="group-title">🏟️ B组 · 瑞士、加拿大、波黑、卡塔尔</div>
+        <div class="teams-grid">
+            <div class="team-card power-78" id="switzerland" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇭</span>
+                    <div class="team-info"><div class="team-name">瑞士</div><div class="team-stats">首轮 1:1 加拿大 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:78%"></div></div><span class="power-value">78</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第12，欧洲传统强队。大赛经验丰富，首轮1:1被加拿大逼平有些意外。防守稳固，定位球威胁大。必须拿下波黑才能掌握出线主动权。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">经验足</span><span class="tag green">防守稳</span><span class="tag green">定位球</span><span class="tag green">心理素质</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻差</span><span class="tag red">年龄大</span><span class="tag red">效率低</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">扎卡（阿森纳/中场）、沙奇里（里昂/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-72" id="canada" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇦</span>
+                    <div class="team-info"><div class="team-name">加拿大</div><div class="team-stats">首轮 1:1 瑞士 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:72%"></div></div><span class="power-value">72</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">北美新势力，首轮1:1逼平瑞士表现强势。戴维斯伤愈复出，边路突破犀利。阿方索戴维斯是球队核心，整体表现超出预期。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">速度快</span><span class="tag green">边路强</span><span class="tag green">体能好</span><span class="tag green">突破犀利</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">经验少</span><span class="tag red">防守差</span><span class="tag red">心态不稳</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">阿方索戴维斯（拜仁/边后卫）、乔纳森戴维（前锋/里尔）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-65" id="bosnia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇧🇦</span>
+                    <div class="team-info"><div class="team-name">波黑</div><div class="team-stats">附加赛淘汰意大利 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:65%"></div></div><span class="power-value">65</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">附加赛爆冷淘汰意大利晋级！防守反击能力强，哲科是进攻核心。首轮尚未开赛，对加拿大是考验。波黑具备黑马潜质，不可低估。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守强</span><span class="tag green">哲科支点</span><span class="tag green">反击犀利</span><span class="tag">意志顽强</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">依赖哲科</span><span class="tag red">中场弱</span><span class="tag red">经验一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">哲科（费内巴切/前锋，40岁传奇）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-35" id="qatar" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇶🇦</span>
+                    <div class="team-info"><div class="team-name">卡塔尔</div><div class="team-stats">首轮 1:1 瑞士 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:35%"></div></div><span class="power-value">35</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界杯新军，首轮1:1逼平瑞士爆出大冷门！虽然场面被动但防守顽强。球员来自国内联赛，水平有限但战术执行到位。首战拿分极大提升士气。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守顽强</span><span class="tag green">战术执行</span><span class="tag">团结精神</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">进攻差</span><span class="tag red">体能一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- C组 -->
+    <div class="group-section" id="group-c">
+        <div class="group-title">🏟️ C组 · 巴西、摩洛哥、苏格兰、海地</div>
+        <div class="teams-grid">
+            <div class="team-card power-87" id="brazil" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇧🇷</span>
+                    <div class="team-info"><div class="team-name">巴西</div><div class="team-stats">首轮 1:1 摩洛哥 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:87%"></div></div><span class="power-value">87</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">五星巴西，世界排名第3。首轮1:1被摩洛哥逼平急需反弹。进攻火力凶猛，内马尔+维尼修斯领衔攻击线。对海地必须大胜重振士气。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻强</span><span class="tag green">技术好</span><span class="tag green">底蕴深</span><span class="tag green">内马尔</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守不稳</span><span class="tag red">依赖内马尔</span><span class="tag red">心态波动</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">内马尔（巴黎/前锋）、维尼修斯（皇马/前锋）、卡塞米罗（曼联/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-82" id="morocco" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇲🇦</span>
+                    <div class="team-info"><div class="team-name">摩洛哥</div><div class="team-stats">首轮 1:1 巴西 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:82%"></div></div><span class="power-value">82</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲黑马，2022世界杯四强！首轮1:1逼平巴西展现强队风范。防守凶悍，反击犀利，是本届最大黑马之一。齐耶赫+马兹拉维领衔阵容。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守强</span><span class="tag green">黑马潜质</span><span class="tag green">反击快</span><span class="tag green">意志顽强</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻一般</span><span class="tag red">经验略逊</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">齐耶赫（巴黎/中场核心）、马兹拉维（拜仁/后卫）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-62" id="scotland" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🏴󠁧󠁢󠁳󠁣󠁴󠁿</span>
+                    <div class="team-info"><div class="team-name">苏格兰</div><div class="team-stats">首轮 1:0 海地 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:62%"></div></div><span class="power-value">62</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">阔别世界杯多年，首轮1:0小胜海地拿到3分。整体实力一般，进攻效率偏低。球员多来自英超/苏超，风格硬朗。小组出线仍有希望。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体对抗</span><span class="tag green">防守硬</span><span class="tag green">高空球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻差</span><span class="tag red">效率低</span><span class="tag red">技术一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">罗伯逊（利物浦/后卫队长）、麦克托米奈（曼联/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-40" id="haiti" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇭🇹</span>
+                    <div class="team-info"><div class="team-name">海地</div><div class="team-stats">首轮 0:1 苏格兰 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:40%"></div></div><span class="power-value">40</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">中北美新军，阔别多年重返世界杯。球员多效力于北美联赛，整体水平有限。首轮0:1小负苏格兰表现尚可，防守有一定起色。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span><span class="tag">速度</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">经验不足</span><span class="tag red">防守差</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- D组 -->
+    <div class="group-section" id="group-d">
+        <div class="group-title">🏟️ D组 · 美国、澳大利亚、巴拉圭、土耳其</div>
+        <div class="teams-grid">
+            <div class="team-card power-80" id="usa" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇺🇸</span>
+                    <div class="team-info"><div class="team-name">美国</div><div class="team-stats">首轮 4:1 巴拉圭 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:80%"></div></div><span class="power-value">80</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">东道主之一，首轮4:1大胜巴拉圭展现强劲实力！普利西奇领衔攻击线，整体配合默契。主场作战优势明显，是本届夺冠热门之一。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">主场优势</span><span class="tag green">进攻强</span><span class="tag green">速度快</span><span class="tag green">体能好</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守不稳</span><span class="tag red">经验欠缺</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">普利西奇（AC米兰/前锋）、麦肯尼（尤文/中场）、雷纳（多特/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-72" id="australia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇦🇺</span>
+                    <div class="team-info"><div class="team-name">澳大利亚</div><div class="team-stats">首轮 2:0 土耳其 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:72%"></div></div><span class="power-value">72</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲强队，首轮2:0完胜土耳其取得3分。防守稳固，战术纪律性强。球员整体年龄偏大，但经验丰富。小组出线形势不错。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">防守稳</span><span class="tag green">战术纪律</span><span class="tag green">经验丰富</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">年龄大</span><span class="tag red">速度慢</span><span class="tag red">进攻一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">马修莱基（转会/中场核心）、杜克（前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-68" id="paraguay" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇵🇾</span>
+                    <div class="team-info"><div class="team-name">巴拉圭</div><div class="team-stats">首轮 1:4 美国 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:68%"></div></div><span class="power-value">68</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">南美传统劲旅，首轮1:4惨败美国遭遇开门黑。防守端问题明显，进攻尚可。球员多来自南美联赛，具备一定实力，急需反弹。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻有威胁</span><span class="tag green">南美技术</span><span class="tag">定位球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守差</span><span class="tag red">客场作战</span><span class="tag red">心态受损</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">戈麦斯（塞维利亚/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-70" id="turkey" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇹🇷</span>
+                    <div class="team-info"><div class="team-name">土耳其</div><div class="team-stats">首轮 0:2 澳大利亚 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:70%"></div></div><span class="power-value">70</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">欧洲劲旅，首轮0:2不敌澳大利亚爆出冷门。恰尔汗奥卢+居莱尔领衔进攻线，实力不俗。急需调整状态，后两场必须全力争胜。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻有潜力</span><span class="tag green">球星能力</span><span class="tag green">技术流</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守差</span><span class="tag red">状态慢热</span><span class="tag red">神经刀</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">恰尔汗奥卢（国米/中场）、居莱尔（皇马/前锋）</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- E组 -->
+    <div class="group-section" id="group-e">
+        <div class="group-title">🏟️ E组 · 德国、厄瓜多尔、科特迪瓦、库拉索</div>
+        <div class="teams-grid">
+            <div class="team-card power-85" id="germany" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇩🇪</span>
+                    <div class="team-info"><div class="team-name">德国</div><div class="team-stats">首轮 7:1 库拉索 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:85%"></div></div><span class="power-value">85</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第2，首轮7:1血洗库拉索展示夺冠实力！维尔茨+穆夏拉领衔新生代攻击群，战术体系成熟。整体实力强劲，是本届夺冠大热门。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻凶猛</span><span class="tag green">新人崛起</span><span class="tag green">战术成熟</span><span class="tag green">底蕴深厚</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守略有隐患</span><span class="tag red">经验欠缺</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">维尔茨（勒沃库森/中场）、穆夏拉（拜仁/前锋）、哈弗茨（阿森纳/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-72" id="ecuador" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇪🇨</span>
+                    <div class="team-info"><div class="team-name">厄瓜多尔</div><div class="team-stats">首轮 1:0 科特迪瓦 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:72%"></div></div><span class="power-value">72</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">南美实力派，首轮1:0小胜科特迪瓦取得开门红。高原主场优势明显，球员多有效力欧洲联赛经历。具备小组出线实力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">高原优势</span><span class="tag green">防守稳</span><span class="tag green">战术执行</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻一般</span><span class="tag red">客场能力存疑</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">恩佐（切尔西/中场）、凯塞多（切尔西/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-68" id="coteivoire" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇮</span>
+                    <div class="team-info"><div class="team-name">科特迪瓦</div><div class="team-stats">首轮 0:1 厄瓜多尔 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:68%"></div></div><span class="power-value">68</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲强队，首轮0:1惜败厄瓜多尔。防守表现尚可，进攻端缺乏效率。球员多来自欧洲五大联赛，个人能力不俗。仍有出线机会。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">个人能力强</span><span class="tag green">身体对抗</span><span class="tag">反击犀利</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻效率低</span><span class="tag red">配合生疏</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">凯西（巴萨/中场）、阿莱（多特/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-32" id="curacao" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇼</span>
+                    <div class="team-info"><div class="team-name">库拉索</div><div class="team-stats">首轮 1:7 德国 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:32%"></div></div><span class="power-value">32</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界杯新军，首轮1:7惨败德国创造本届最惨失利。球员来自荷兰联赛，整体水平有限。实力差距明显，主要目标是积累经验。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力差距大</span><span class="tag red">经验不足</span><span class="tag red">防守差</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- F组 -->
+    <div class="group-section" id="group-f">
+        <div class="group-title">🏟️ F组 · 荷兰、日本、瑞典、突尼斯</div>
+        <div class="teams-grid">
+            <div class="team-card power-84" id="netherlands" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇳🇱</span>
+                    <div class="team-info"><div class="team-name">荷兰</div><div class="team-stats">首轮 2:2 日本 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:84%"></div></div><span class="power-value">84</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第5，首轮2:2战平日本展现进攻实力。加克波+德佩领衔攻击线，范戴克坐镇后防。整体实力强劲，是夺冠热门之一。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻强</span><span class="tag green">防守稳</span><span class="tag green">范戴克</span><span class="tag green">底蕴深</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">中场控制差</span><span class="tag red">心态波动</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">范戴克（利物浦/后卫）、加克波（曼联/前锋）、德佩（马竞/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-76" id="japan" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇯🇵</span>
+                    <div class="team-info"><div class="team-name">日本</div><div class="team-stats">首轮 2:2 荷兰 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:76%"></div></div><span class="power-value">76</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲最强球队！首轮2:2逼平荷兰爆出大冷门。阵容豪华，13人效力欧洲联赛，攻防两端都有顶级球员。具备挑战任何强队的实力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">技术流</span><span class="tag green">配合默契</span><span class="tag green">欧洲经验</span><span class="tag green">战术素养</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">身体对抗</span><span class="tag red">高空球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">久保建英（皇马/前锋）、三笘薰（布莱顿/前锋）、远藤航（利物浦/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-70" id="sweden" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇸🇪</span>
+                    <div class="team-info"><div class="team-name">瑞典</div><div class="team-stats">首轮 5:1 突尼斯 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:70%"></div></div><span class="power-value">70</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">北欧强队，首轮5:1大胜突尼斯状态火热。伊萨克领衔进攻线，身体对抗能力强。具备小组出线实力，有望走得更远。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体强壮</span><span class="tag green">进攻强</span><span class="tag green">高空球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">技术一般</span><span class="tag red">速度慢</span><span class="tag red">防守一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">伊萨克（纽卡/前锋）、福斯贝里（莱比锡/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-50" id="tunisia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇹🇳</span>
+                    <div class="team-info"><div class="team-name">突尼斯</div><div class="team-stats">首轮 1:5 瑞典 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:50%"></div></div><span class="power-value">50</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲队伍，首轮1:5惨败瑞典遭遇开门黑。攻防两端都暴露明显差距，整体实力有限。球员多来自本土联赛，与欧洲强队有较大差距。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span><span class="tag">速度</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力差距</span><span class="tag red">防守差</span><span class="tag red">经验不足</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- G组 -->
+    <div class="group-section" id="group-g">
+        <div class="group-title">🏟️ G组 · 比利时、埃及、伊朗、新西兰</div>
+        <div class="teams-grid">
+            <div class="team-card power-78" id="belgium" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇧🇪</span>
+                    <div class="team-info"><div class="team-name">比利时</div><div class="team-stats">待定 · 黄金一代末期</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:78%"></div></div><span class="power-value">78</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第6，首轮尚未开赛。德布劳内领衔黄金一代最后一搏，整体实力依然强劲。但阵容年龄偏大，体力是隐患。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">德布劳内</span><span class="tag green">经验丰富</span><span class="tag green">技术流</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">年龄大</span><span class="tag red">体能差</span><span class="tag red">防守老化</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">德布劳内（曼城/中场）、卢卡库（罗马/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-72" id="egypt" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇪🇬</span>
+                    <div class="team-info"><div class="team-name">埃及</div><div class="team-stats">待定 · 萨拉赫领衔</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:72%"></div></div><span class="power-value">72</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲强队，萨拉赫领衔攻击线。整体实力均衡，球员多有效力欧洲联赛经历。首轮尚未开赛，有望小组出线。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">萨拉赫</span><span class="tag green">反击犀利</span><span class="tag green">防守稳</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">过度依赖萨拉赫</span><span class="tag red">中场控制一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">萨拉赫（利物浦/前锋/队长）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-65" id="iran" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇮🇷</span>
+                    <div class="team-info"><div class="team-name">伊朗</div><div class="team-stats">待定 · 亚洲强队</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:65%"></div></div><span class="power-value">65</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲强队，首轮待定。球员身体对抗能力强，防守凶悍。进攻端有阿兹蒙等球员，具备一定实力。政治因素可能影响发挥。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体对抗</span><span class="tag green">防守凶悍</span><span class="tag green">战术纪律</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻一般</span><span class="tag red">技术一般</span><span class="tag red">政治影响</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">阿兹蒙（勒沃库森/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-50" id="newzealand" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇳🇿</span>
+                    <div class="team-info"><div class="team-name">新西兰</div><div class="team-stats">待定 · 大洋洲代表</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:50%"></div></div><span class="power-value">50</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">大洋洲代表，首轮待定。球员多效力于低级别联赛，整体水平有限。身体条件不错但技术粗糙，晋级16强难度极大。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体条件</span><span class="tag green">高空球</span><span class="tag">拼搏精神</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">技术粗糙</span><span class="tag red">经验不足</span><span class="tag red">实力有限</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- H组 -->
+    <div class="group-section" id="group-h">
+        <div class="group-title">🏟️ H组 · 西班牙、乌拉圭、沙特、佛得角</div>
+        <div class="teams-grid">
+            <div class="team-card power-92" id="spain" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇪🇸</span>
+                    <div class="team-info"><div class="team-name">西班牙</div><div class="team-stats">首轮待定 · 世界第1</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:92%"></div></div><span class="power-value">92</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第1！首轮尚未开赛。新生代球员已经成熟，佩德里+加维+费兰托雷斯领衔。传控打法登峰造极，是本届夺冠最大热门。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">传控顶级</span><span class="tag green">新人崛起</span><span class="tag green">战术先进</span><span class="tag green">底蕴深厚</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">进攻效率</span><span class="tag red">高空球</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">佩德里（巴萨/中场）、加维（巴萨/中场）、费兰托雷斯（巴萨/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-78" id="uruguay" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇺🇾</span>
+                    <div class="team-info"><div class="team-name">乌拉圭</div><div class="team-stats">待定 · 南美劲旅</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:78%"></div></div><span class="power-value">78</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">南美传统强队，努涅斯+巴尔韦德领衔青春风暴。身体对抗强，防守凶悍。首轮尚未开赛，具备挑战任何对手的实力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体强壮</span><span class="tag green">青春风暴</span><span class="tag green">防守凶悍</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">经验欠缺</span><span class="tag red">配合生疏</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">努涅斯（利物浦/前锋）、巴尔韦德（皇马/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="saudiarabia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇸🇦</span>
+                    <div class="team-info"><div class="team-name">沙特阿拉伯</div><div class="team-stats">待定 · 亚洲黑马</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲强队，首轮待定。球员多来自本土联赛，默契度高。2022世界杯曾爆冷阿根廷，具备一定黑马潜质。防守反击是主要战术。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">默契度高</span><span class="tag green">防守反击</span><span class="tag green">黑马潜质</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">技术一般</span><span class="tag red">速度慢</span><span class="tag red">经验欠缺</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">多萨里（利雅得新月/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-48" id="capeverde" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇻</span>
+                    <div class="team-info"><div class="team-name">佛得角</div><div class="team-stats">待定 · 非洲黑马</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:48%"></div></div><span class="power-value">48</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲新军，首次参加世界杯。球员多在低级别联赛效力，实力有限。但团队凝聚力强，防守凶悍，具备爆冷潜力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">团队精神</span><span class="tag green">防守顽强</span><span class="tag">黑马潜质</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">经验不足</span><span class="tag red">个人能力差</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- I组 -->
+    <div class="group-section" id="group-i">
+        <div class="group-title">🏟️ I组 · 法国、挪威、塞内加尔、伊拉克</div>
+        <div class="teams-grid">
+            <div class="team-card power-91" id="france" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇫🇷</span>
+                    <div class="team-info"><div class="team-name">法国</div><div class="team-stats">首轮 3:1 塞内加尔 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:91%"></div></div><span class="power-value">91</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第2，首轮3:1击败塞内加尔。姆巴佩领衔超豪华攻击线，阵容深度无与伦比。伤病满营但仍具统治力，是夺冠最大热门之一。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">姆巴佩</span><span class="tag green">阵容深厚</span><span class="tag green">经验足</span><span class="tag green">战术成熟</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">伤病多</span><span class="tag red">内讧隐患</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">姆巴佩（皇马/前锋）、格列兹曼（马竞/前锋）、楚阿梅尼（皇马/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-75" id="norway" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇳🇴</span>
+                    <div class="team-info"><div class="team-name">挪威</div><div class="team-stats">首轮 4:1 伊拉克 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:75%"></div></div><span class="power-value">75</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">北欧劲旅，首轮4:1大胜伊拉克。哈兰德+厄德高领衔双星，整体实力强劲。具备挑战任何强队的潜力，是本届黑马候选。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">哈兰德</span><span class="tag green">厄德高</span><span class="tag green">身体强壮</span><span class="tag green">进攻强</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守一般</span><span class="tag red">大赛经验</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">哈兰德（曼城/前锋）、厄德高（阿森纳/中场队长）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-68" id="senegal" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇸🇳</span>
+                    <div class="team-info"><div class="team-name">塞内加尔</div><div class="team-stats">首轮 1:3 法国 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:68%"></div></div><span class="power-value">68</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲冠军，首轮1:3不敌法国。2022世界杯曾进8强，底蕴深厚。格耶+萨尔领衔中前场，仍有出线希望。后两场必须全力争胜。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">身体强壮</span><span class="tag green">经验足</span><span class="tag green">反击犀利</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守下滑</span><span class="tag red">进攻一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">格耶（埃弗顿/中场）、马内（拜仁/前锋/队长）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="iraq" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇮🇶</span>
+                    <div class="team-info"><div class="team-name">伊拉克</div><div class="team-stats">首轮 1:4 挪威 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲球队，首轮1:4惨败挪威。球员整体实力有限，与欧洲强队有明显差距。球员多来自本土联赛或低级别海外联赛，出线希望渺茫。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span><span class="tag">速度</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力差距</span><span class="tag red">防守差</span><span class="tag red">经验不足</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- J组 -->
+    <div class="group-section" id="group-j">
+        <div class="group-title">🏟️ J组 · 阿根廷、奥地利、阿尔及利亚、约旦</div>
+        <div class="teams-grid">
+            <div class="team-card power-88" id="argentina" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇦🇷</span>
+                    <div class="team-info"><div class="team-name">阿根廷</div><div class="team-stats">首轮 3:0 阿尔及利亚 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:88%"></div></div><span class="power-value">88</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">卫冕冠军，世界排名第4。首轮3:0大胜阿尔及利亚展现卫冕决心。梅西仍是核心，但更多依靠团队。劳塔罗+阿尔瓦雷斯搭档锋线，攻守平衡。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">团队强大</span><span class="tag green">经验足</span><span class="tag green">战术成熟</span><span class="tag green">劳塔罗</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">梅西依赖</span><span class="tag red">年龄老化</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">梅西（迈阿密/前锋/队长）、劳塔罗（国米/前锋）、阿尔瓦雷斯（曼城/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-72" id="austria" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇦🇹</span>
+                    <div class="team-info"><div class="team-name">奥地利</div><div class="team-stats">首轮 3:1 约旦 · 积3分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:72%"></div></div><span class="power-value">72</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">欧洲劲旅，首轮3:1击败约旦取得开门红。阿拉巴缺阵但整体实力仍在，球员多有效力德甲经历。具备小组出线实力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">德甲经验</span><span class="tag green">身体强壮</span><span class="tag green">战术纪律</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">阿拉巴缺阵</span><span class="tag red">进攻一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">阿拉巴（皇马/后卫/队长）、萨比策（多特/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-50" id="algeria" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇩🇿</span>
+                    <div class="team-info"><div class="team-name">阿尔及利亚</div><div class="team-stats">首轮 0:3 阿根廷 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:50%"></div></div><span class="power-value">50</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲强队，首轮0:3惨败阿根廷。球员多来自欧洲联赛，个人能力不俗。但与顶级强队仍有明显差距，出线形势严峻。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">个人能力</span><span class="tag green">技术流</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力差距</span><span class="tag red">防守差</span><span class="tag red">经验不足</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">马赫雷斯（曼城/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-50" id="jordan" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇯🇴</span>
+                    <div class="team-info"><div class="team-name">约旦</div><div class="team-stats">首轮 1:3 奥地利 · 积0分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:50%"></div></div><span class="power-value">50</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲代表，首次参加世界杯。首轮1:3不敌奥地利展现一定实力。球员多来自本土联赛或低级别海外联赛，出线难度极大。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span><span class="tag">团结</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">经验不足</span><span class="tag red">个人能力差</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- K组 -->
+    <div class="group-section" id="group-k">
+        <div class="group-title">🏟️ K组 · 葡萄牙、哥伦比亚、乌兹别克、刚果</div>
+        <div class="teams-grid">
+            <div class="team-card power-83" id="portugal" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇵🇹</span>
+                    <div class="team-info"><div class="team-name">葡萄牙</div><div class="team-stats">首轮 1:1 刚果 · 积1分</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:83%"></div></div><span class="power-value">83</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">欧洲劲旅，首轮1:1被刚果逼平爆出冷门。C罗领衔最后一届世界杯，B席+B费支撑中场。必须调整状态，后两场全力争胜。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">中场强</span><span class="tag green">经验丰富</span><span class="tag green">C罗</span><span class="tag green">B费B席</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">C罗老化</span><span class="tag red">状态慢热</span><span class="tag red">防守不稳</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">C罗（利雅得/前锋/队长）、B费（曼联/中场）、B席（曼城/中场）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-78" id="colombia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇴</span>
+                    <div class="team-info"><div class="team-name">哥伦比亚</div><div class="team-stats">首轮待定 · 南美强队</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:78%"></div></div><span class="power-value">78</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">南美强队，首轮尚未开赛。J罗+路易斯迪亚斯领衔，整体实力均衡。球员多有效力欧洲联赛经历，具备小组出线甚至走更远的潜力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">进攻强</span><span class="tag green">技术流</span><span class="tag green">J罗组织</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">防守一般</span><span class="tag red">客场作战</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">J罗（奥林匹亚/中场）、路易斯迪亚斯（利物浦/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-50" id="uzbekistan" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇺🇿</span>
+                    <div class="team-info"><div class="team-name">乌兹别克斯坦</div><div class="team-stats">首轮待定 · 亚洲新军</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:50%"></div></div><span class="power-value">50</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">亚洲新军，首次参加世界杯。首轮尚未开赛。球员多来自俄超或本土联赛，整体实力有限。但战术纪律性强，具备一定竞争力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">战术纪律</span><span class="tag green">身体强壮</span><span class="tag">拼搏精神</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">经验不足</span><span class="tag red">技术一般</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="drcongo" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇨🇩</span>
+                    <div class="team-info"><div class="team-name">刚果民主共和国</div><div class="team-stats">首轮待定 · 非洲球队</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲球队，首轮尚未开赛但首轮1:1逼平葡萄牙爆出大冷门。球员多来自欧洲五大联赛，个人能力不俗。具备一定黑马潜质。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">个人能力</span><span class="tag green">身体强壮</span><span class="tag green">黑马潜质</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">配合生疏</span><span class="tag red">经验不足</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">博古什（罗马/中场）</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- L组 -->
+    <div class="group-section" id="group-l">
+        <div class="group-title">🏟️ L组 · 英格兰、克罗地亚、加纳、巴拿马</div>
+        <div class="teams-grid">
+            <div class="team-card power-89" id="england" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                    <div class="team-info"><div class="team-name">英格兰</div><div class="team-stats">首轮待定 · 世界第5</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:89%"></div></div><span class="power-value">89</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">世界排名第5，首轮尚未开赛。贝林厄姆+凯恩领衔，阵容豪华攻守均衡。点球魔咒已破，大赛成绩逐年提升。本届是夺冠最好机会。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">阵容豪华</span><span class="tag green">贝林厄姆</span><span class="tag green">凯恩</span><span class="tag green">防守稳</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">中场控制</span><span class="tag red">心态</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">凯恩（拜仁/前锋/队长）、贝林厄姆（皇马/中场）、萨卡（阿森纳/前锋）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-75" id="croatia" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇭🇷</span>
+                    <div class="team-info"><div class="team-name">克罗地亚</div><div class="team-stats">首轮待定 · 上届亚军</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:75%"></div></div><span class="power-value">75</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">上届亚军，但核心阵容老化。莫德里奇最后一届世界杯，格瓦迪奥尔领衔后防。整体实力有所下滑，但经验依然丰富。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">经验丰富</span><span class="tag green">莫德里奇</span><span class="tag green">防守强</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">年龄老化</span><span class="tag red">体能下降</span><span class="tag red">新人不足</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">莫德里奇（皇马/中场/队长）、格瓦迪奥尔（曼城/后卫）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-68" id="ghana" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇬🇭</span>
+                    <div class="team-info"><div class="team-name">加纳</div><div class="team-stats">待定 · 非洲强队</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:68%"></div></div><span class="power-value">68</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">非洲传统强队，首轮尚未开赛。威廉兄弟领衔新生代，整体实力有所下滑。2022世界杯曾制造惊喜，本届仍具备一定竞争力。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">威廉兄弟</span><span class="tag green">身体强壮</span><span class="tag green">黑马潜质</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力下滑</span><span class="tag red">配合生疏</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">威廉（阿森纳/前锋）、威廉（水晶宫/后卫）</div></div>
+                </div>
+            </div>
+            <div class="team-card power-55" id="panama" onclick="toggleDetail(this)">
+                <div class="team-header">
+                    <span class="team-flag">🇵🇦</span>
+                    <div class="team-info"><div class="team-name">巴拿马</div><div class="team-stats">待定 · 中北美代表</div></div>
+                    <div class="power-section"><div class="power-bar"><div class="power-fill" style="width:55%"></div></div><span class="power-value">55</span></div>
+                    <span class="expand-icon">▼</span>
+                </div>
+                <div class="team-detail">
+                    <div class="detail-section"><div class="detail-title">📊 综合分析</div><div class="detail-content">中北美代表，首次参加世界杯。首轮尚未开赛，整体实力有限。球员多来自本土联赛或低级别海外联赛，出线难度极大。</div></div>
+                    <div class="detail-section"><div class="detail-title">⚡ 优势</div><div class="detail-tags"><span class="tag green">拼搏精神</span><span class="tag">团结</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⚠️ 劣势</div><div class="detail-tags"><span class="tag red">实力有限</span><span class="tag red">经验不足</span><span class="tag red">个人能力差</span></div></div>
+                    <div class="detail-section"><div class="detail-title">⭐ 关键球员</div><div class="detail-content">暂无知名球员</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align:center; padding: 30px; color: #888; font-size: 0.9em;">
+        <p>数据来源: 世界杯官网、FOX Sports、各大足球数据网站</p>
+        <p>评分标准: 首轮表现(30%) + 世界排名(20%) + 阵容实力(25%) + 近期状态(15%) + 关键球员(10%)</p>
+        <p style="margin-top: 10px; color: #ffa502;">🦐 玲珑Hermes AI 武力值分析 · 每日更新</p>
+    </div>
+    
+    <script>
+        function toggleDetail(card) {
+            document.querySelectorAll('.team-card.expanded').forEach(c => {
+                if (c !== card) c.classList.remove('expanded');
+            });
+            card.classList.toggle('expanded');
+        }
+        
+        function scrollToTeam(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('expanded');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    </script>
+</body>
+</html>
